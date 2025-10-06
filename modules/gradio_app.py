@@ -53,6 +53,7 @@ from core.prosody_processor import (
 
 # Transformador fonético para variaciones dialectales del español
 from core.phonetic_processor import SpanishPhoneticTransformer
+from core.spanish_dialects import get_dialect_names, get_dialect_id_by_name
 
 # ====================================================================================================
 # IMPORTACIÓN CONDICIONAL DE DEPENDENCIAS OPCIONALES
@@ -123,8 +124,8 @@ class ProsodyGeneratorGradio:
         self.text_file = None               # Archivo de texto opcional
         self.reference_audio = None         # Archivo de audio de referencia obligatorio
 
-        # Transformador fonético para simulación de variaciones dialectales
-        self.phonetic_transformer = SpanishPhoneticTransformer()
+        # Transformador fonético (se inicializa bajo demanda con el dialecto seleccionado)
+        self.phonetic_transformer = None
 
     def check_files(self, text_file, direct_text, audio_file):
         """
@@ -338,7 +339,7 @@ class ProsodyGeneratorGradio:
         else:
             return 2  # Conclusión
 
-    def generate_audio(self, text_input_type, text_file, direct_text, audio_file, use_phonetic, progress=gr.Progress()):
+    def generate_audio(self, text_input_type, text_file, direct_text, audio_file, use_phonetic, dialect_name, progress=gr.Progress()):
         """
         Función principal de generación de audio con mejoras prosódicas.
 
@@ -359,6 +360,7 @@ class ProsodyGeneratorGradio:
             direct_text (str): Texto escrito directamente (si aplica)
             audio_file (str): Ruta al audio de referencia (.wav, .mp3)
             use_phonetic (bool): Si aplicar transformación fonética
+            dialect_name (str): Nombre del dialecto a usar para transformación fonética
             progress (gr.Progress): Objeto de progreso de Gradio
 
         Yields:
@@ -453,7 +455,19 @@ class ProsodyGeneratorGradio:
             # Aplicar transformación fonética si está habilitada
             if use_phonetic:
                 progress(0.1, desc="Aplicando transformación fonética...")
-                self.log("\n🔤 Aplicando transformación fonética al texto...")
+
+                # Obtener ID del dialecto a partir del nombre
+                try:
+                    dialect_id = get_dialect_id_by_name(dialect_name)
+                    self.log(f"\n🔤 Aplicando transformación fonética con dialecto: {dialect_name}")
+                except ValueError:
+                    # Si no se encuentra el dialecto, usar el predeterminado
+                    dialect_id = "castilla"
+                    self.log(f"\n⚠️ Dialecto '{dialect_name}' no encontrado, usando Castilla-La Mancha")
+
+                # Crear transformador con el dialecto seleccionado
+                self.phonetic_transformer = SpanishPhoneticTransformer(dialect=dialect_id)
+
                 original_text = "\n\n".join([p['text'] for p in paragraphs])
 
                 # Guardar texto original
@@ -847,7 +861,19 @@ class ProsodyGeneratorGradio:
 
         with gr.Blocks(title="🎵 Generador F5-TTS con Mejora Prosódica", theme=gr.themes.Soft()) as interface:
             gr.Markdown("# 🎵 Generador F5-TTS con Mejora Prosódica")
-            gr.Markdown("Interfaz moderna con Gradio para generación de audio con mejoras prosódicas")
+            gr.Markdown("""
+            Interfaz moderna con Gradio para generación de audio con mejoras prosódicas
+
+            ---
+
+            ## 🌟 NUEVO: Sistema de Dialectos Modulares
+
+            Este TTS incluye **9 dialectos del español predefinidos** y un sistema 100% extensible para crear tus propios dialectos.
+
+            **Dialectos disponibles:** Castilla-La Mancha, Andaluz, Granada, Rioplatense, Caribeño, Mexicano, Canario, Chileno, Gallego
+
+            📚 **[Ver guía completa para crear tu propio dialecto](../GUIA_DIALECTOS.md)**
+            """)
 
             with gr.Row():
                 with gr.Column(scale=1):
@@ -925,6 +951,37 @@ class ProsodyGeneratorGradio:
                         info="Simula errores ortográficos basados en pronunciación (hacer→acer, llevar→yevar)"
                     )
 
+                    gr.Markdown("**🗣️ Selección de Dialecto**")
+
+                    dialect_selector = gr.Dropdown(
+                        label="Dialecto del español",
+                        choices=get_dialect_names(),
+                        value="Castilla-La Mancha (Toledano)",
+                        info="⭐ CARACTERÍSTICA PRINCIPAL: Elige entre 9 dialectos o crea el tuyo propio",
+                        interactive=True
+                    )
+
+                    gr.Markdown("""
+                    <details>
+                    <summary>ℹ️ Información sobre dialectos</summary>
+
+                    **¿Qué hacen los dialectos?**
+                    - Simulan la pronunciación real de cada región
+                    - Aplican fenómenos fonéticos auténticos (seseo, yeísmo, etc.)
+                    - Mejoran la naturalidad del audio generado
+
+                    **¿Cómo crear tu propio dialecto?**
+                    - Edita `modules/core/spanish_dialects.py`
+                    - Define reglas fonéticas con regex
+                    - [Ver guía completa](../GUIA_DIALECTOS.md)
+
+                    **Ejemplos de transformaciones:**
+                    - Castilla: "hacer llamada" → "acer yamá"
+                    - Granada: "hacer llamada" → "ase yamaa"
+                    - Rioplatense: "hacer llamada" → "aser shamada"
+                    </details>
+                    """, elem_classes=["dialect-info"])
+
                 with gr.Column():
                     gr.Markdown("### 🎛️ Controles")
 
@@ -967,7 +1024,7 @@ class ProsodyGeneratorGradio:
             # Evento de generación
             generate_btn.click(
                 fn=self.generate_audio,
-                inputs=[text_input_type, text_file_input, direct_text_input, audio_input, use_phonetic],
+                inputs=[text_input_type, text_file_input, direct_text_input, audio_input, use_phonetic, dialect_selector],
                 outputs=[progress_bar, status_text, log_output, final_audio, fase1_audio, final_audio, fase1_audio]
             )
 

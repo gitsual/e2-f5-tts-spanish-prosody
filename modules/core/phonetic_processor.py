@@ -51,6 +51,7 @@ import re
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
 from collections import defaultdict
+from .spanish_dialects import get_dialect, get_available_dialects, get_dialect_id_by_name
 
 
 @dataclass
@@ -93,19 +94,33 @@ class SpanishPhoneticTransformer:
         phonetic_rules (list): Conjunto de reglas fonéticas a aplicar
     """
 
-    def __init__(self):
+    def __init__(self, dialect: str = "castilla"):
         """
         Inicializa el transformador con reglas fonéticas predefinidas.
 
         Configura el sistema de caché multicapa y carga todas las reglas
         de transformación fonética organizadas por fenómeno.
+
+        Args:
+            dialect (str): Identificador del dialecto a usar. Opciones:
+                - "castilla": Castilla-La Mancha (por defecto)
+                - "andaluz": Andaluz
+                - "rioplatense": Rioplatense (Argentina/Uruguay)
+                - "caribeno": Caribeño
+                - "mexicano": Mexicano
+                - "canario": Canario
+                - "chileno": Chileno
         """
         # Sistema de caché multicapa
         self.word_cache = {}  # Caché de palabras individuales
         self.phrase_cache = {}  # Caché de frases comunes
         self.transformation_history = defaultdict(list)  # Historial para consistencia
 
-        # Reglas fonéticas españolas sistemáticas
+        # Guardar dialecto seleccionado
+        self.dialect = dialect
+        self.dialect_config = get_dialect(dialect)
+
+        # Reglas fonéticas españolas sistemáticas (del dialecto seleccionado)
         self.phonetic_rules = self._initialize_rules()
 
         # Diccionario exhaustivo de anglicismos con pronunciación castellana toledana
@@ -1597,46 +1612,31 @@ class SpanishPhoneticTransformer:
         return dictionary
 
     def _initialize_rules(self) -> List[PhoneticRule]:
-        """Inicializa reglas de transformación fonética española"""
-        return [
-            # H muda - prioridad alta (eliminar h inicial)
-            PhoneticRule(r'\bhab', 'ab', priority=10),  # haber -> aber
-            PhoneticRule(r'\bhac', 'ac', priority=10),   # hacer -> acer
-            PhoneticRule(r'\bha([^s])', r'a\1', priority=9),  # general h inicial
-            PhoneticRule(r'\bhe', 'e', priority=9),      # hecho -> echo
-            PhoneticRule(r'\bhi', 'i', priority=9),      # hijo -> ijo
-            PhoneticRule(r'\bho', 'o', priority=9),      # hora -> ora
-            PhoneticRule(r'\bhu', 'u', priority=9),      # huevo -> uevo
+        """
+        Inicializa reglas de transformación fonética española.
 
-            # B/V confusion (betacismo) - muy común en español
-            PhoneticRule(r'mb', 'mb', priority=8),  # mantener mb siempre
-            PhoneticRule(r'nv', 'nb', priority=8),  # enviar -> enbiar
-            PhoneticRule(r'\bv', 'b', priority=7),  # vez -> bez
-            PhoneticRule(r'([aeiou])v([aeiou])', r'\1b\2', priority=6),  # intervocálica
+        Carga las reglas específicas del dialecto seleccionado desde la configuración.
 
-            # LL/Y confusion (yeísmo) - muy extendido
-            PhoneticRule(r'll', 'y', priority=7),  # llamar -> yamar
+        Returns:
+            Lista de objetos PhoneticRule con las reglas del dialecto
+        """
+        rules = []
 
-            # G/J ante e,i - confusión común
-            PhoneticRule(r'g([ei])', r'j\1', priority=6),  # generar -> jenerar
+        # Obtener reglas del dialecto
+        dialect_rules = self.dialect_config.get("rules", [])
 
-            # ELIMINADO: C/S/Z (seseo) - No aplica en español toledano
+        # Convertir las reglas del diccionario a objetos PhoneticRule
+        for rule_dict in dialect_rules:
+            rule = PhoneticRule(
+                pattern=rule_dict.get("pattern", ""),
+                replacement=rule_dict.get("replacement", ""),
+                context=rule_dict.get("context"),
+                exceptions=rule_dict.get("exceptions", []),
+                priority=rule_dict.get("priority", 0)
+            )
+            rules.append(rule)
 
-            # QU -> K (simplificación)
-            PhoneticRule(r'qu', 'k', priority=4),  # queso -> keso
-
-            # X -> S en posición inicial
-            PhoneticRule(r'\bx', 's', priority=4),  # xenofobia -> senofobia
-
-            # CC -> C (simplificación)
-            PhoneticRule(r'cc', 'c', priority=3),  # acción -> ación
-
-            # Terminación -ado -> -ao (relajación)
-            PhoneticRule(r'ado\b', 'ao', priority=3),  # cansado -> cansao
-
-            # Terminación -ada -> -á (relajación)
-            PhoneticRule(r'ada\b', 'á', priority=3),  # cansada -> cansá
-        ]
+        return rules
 
     def _number_to_phonetic_spanish(self, number: int) -> str:
         """
