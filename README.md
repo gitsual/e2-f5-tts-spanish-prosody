@@ -47,6 +47,36 @@ Este trabajo presenta un sistema híbrido de síntesis de voz (Text-to-Speech, T
 
 ---
 
+## 📊 Diagramas de Documentación
+
+Para facilitar la comprensión del sistema, se incluyen diagramas visuales detallados:
+
+### Arquitectura del Sistema
+
+![Arquitectura del Sistema](arquitectura-sistema.png)
+
+Vista general de componentes y flujo de datos del sistema híbrido de síntesis de voz.
+
+### Diagrama de Clases
+
+![Diagrama de Clases](diagrama-clases.png)
+
+Estructura de clases principales del sistema y sus relaciones.
+
+### Secuencia de Interacciones
+
+![Secuencia de Interacciones](secuencia-interacciones.png)
+
+Interacción entre componentes durante el proceso de generación de audio.
+
+### Flujo de Usuario
+
+![Flujo de Usuario](flujo-de-usuario.png)
+
+Proceso completo paso a paso desde la entrada del usuario hasta la generación final del audio.
+
+---
+
 ## 1. Introducción
 
 ### 1.1 Motivación
@@ -107,6 +137,10 @@ F0 (Hz)
 - Modulación de `sway_sampling_coef` para suavizar transiciones
 - Variación de `nfe_step` según posición en el arco
 
+![Fundamentos Teóricos del Arco Prosódico](fundamentos-teoricos-del-arco-prosodico.png)
+
+Diagrama detallado de los fundamentos teóricos del arco prosódico, incluyendo parámetros de control y su influencia en la síntesis.
+
 #### 2.1.2 Regla del 3-5-8 (BBC Broadcasting)
 
 Patrón rítmico óptimo desarrollado en los años 50 por la BBC para narrativa hablada:
@@ -114,6 +148,10 @@ Patrón rítmico óptimo desarrollado en los años 50 por la BBC para narrativa 
 - **Grupos de 3-5 palabras**: Unidad prosódica básica
 - **Pausas cada 8-10 sílabas**: Sincronización respiratoria
 - **Variación rítmica**: Evitar monotonía
+
+![Regla del 3-5-8](regla-del-3-5-8.png)
+
+Ilustración del patrón rítmico 3-5-8 de la BBC y su aplicación en el sistema.
 
 **Implementación:**
 ```python
@@ -132,6 +170,10 @@ Alineación de pausas respiratorias con estructura gramatical:
 | Punto y coma | 250-300 | Separación de ideas |
 | Punto | 400-500 | Fin de oración |
 | Párrafo | 600-800 | Cambio de tema |
+
+![Pausas Respiratorias y Sintácticas](pausas-respiratorias-y-sintacticas.png)
+
+Diagrama detallado de las pausas respiratorias y sintácticas y su sincronización con la estructura gramatical.
 
 ### 2.2 Fenómenos Fonéticos del Español
 
@@ -163,6 +205,12 @@ Alineación de pausas respiratorias con estructura gramatical:
 ---
 
 ## 3. Arquitectura del Sistema
+
+> 📊 **Diagramas de referencia:**
+> - **[Arquitectura Completa del Sistema](docs/diagrams/arquitectura-sistema.puml)** - Vista de componentes y capas
+> - **[Diagrama de Clases](docs/diagrams/diagrama-clases.puml)** - Clases principales y relaciones
+> - **[Secuencia de Interacciones](docs/diagrams/secuencia-interacciones.puml)** - Flujo detallado de comunicación
+> - **[Flujo de Generación](docs/diagrams/flujo-generacion.mmd)** - Proceso paso a paso con decisiones
 
 ### 3.1 Diagrama General
 
@@ -310,6 +358,10 @@ Alineación de pausas respiratorias con estructura gramatical:
      - Valores negativos altos (-0.6): Mayor variación prosódica
      - Valores cercanos a 0 (-0.2): Más estable, menos variación
      - Se ajusta según el tipo de frase y contexto
+
+   ![Influencia de Parámetros en la Prosodia](influencia-de-parametros-en-la-prosodia.png)
+
+   Diagrama que muestra la influencia de cada parámetro (nfe_step, cfg_strength, sway_sampling_coef) en las características prosódicas del audio generado.
 
 4. **Aplicación del Arco Prosódico:**
    - Implementa el concepto lingüístico del "arco prosódico" (Lieberman, 1967)
@@ -646,6 +698,8 @@ resultado = transformer.transform_text(texto)
 ---
 
 ## 4. Sistema de Dialectos: Guía Completa
+
+> 📊 **Diagrama visual completo:** [Sistema de Dialectos](docs/diagrams/sistema-dialectos.mmd) - Incluye flujo de transformación, fenómenos fonéticos por región, ejemplos comparativos, y arquitectura modular extensible.
 
 ### 4.1 ¿Por qué un sistema de dialectos?
 
