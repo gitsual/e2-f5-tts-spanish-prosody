@@ -1,8 +1,50 @@
 #!/usr/bin/env python3
 """
-Transformador Fonético Español
-Transforma texto español a su versión fonética con errores sistemáticos
-Optimizado para procesamiento rápido sin dependencias externas pesadas
+====================================================================================================
+TRANSFORMADOR FONÉTICO ESPAÑOL - SIMULACIÓN DE VARIACIONES DIALECTALES
+====================================================================================================
+
+Descripción:
+    Sistema de transformación fonética que simula variaciones dialectales del español,
+    principalmente fenómenos como betacismo, yeísmo y seseo. Diseñado para generar
+    versiones de texto que reflejen cómo se pronuncian realmente las palabras.
+
+Fenómenos Fonéticos Implementados:
+
+    1. BETACISMO (b/v)
+       - Confusión entre 'b' y 'v' (pronunciación idéntica en español)
+       - Ejemplo: "llevar" → "yevar", "haber" → "aber"
+
+    2. YEÍSMO (ll/y)
+       - Pérdida de distinción entre 'll' y 'y'
+       - Ejemplo: "llevar" → "yevar", "calle" → "caye"
+
+    3. SESEO (c/z/s)
+       - Pronunciación de 'c' (antes de e,i) y 'z' como 's'
+       - Ejemplo: "hacer" → "aser", "vez" → "ves"
+
+    4. ASPIRACIÓN/PÉRDIDA DE H
+       - Eliminación de 'h' muda o aspiración
+       - Ejemplo: "hacer" → "acer"
+
+    5. ADAPTACIÓN DE ANGLICISMOS
+       - Castellanización de términos ingleses
+       - Ejemplo: "marketing" → "márquetin"
+
+Características Técnicas:
+    - Sistema de caché multicapa para rendimiento
+    - Reglas aplicadas por prioridad
+    - Mantenimiento de consistencia en transformaciones
+    - Excepciones configurables por regla
+    - Soporte para contexto (caracteres circundantes)
+
+Aplicación:
+    Útil para TTS que necesita generar audio más natural reflejando
+    cómo se pronuncia realmente el español en diferentes dialectos.
+
+Autor: Sistema de transformación fonética
+Versión: 2.0
+====================================================================================================
 """
 
 import re
@@ -13,23 +55,51 @@ from collections import defaultdict
 
 @dataclass
 class PhoneticRule:
-    """Define una regla de transformación fonética"""
+    """
+    Representa una regla de transformación fonética.
+
+    Attributes:
+        pattern (str): Patrón regex a buscar
+        replacement (str): Texto de reemplazo
+        context (str, optional): Contexto requerido (antes/después)
+        exceptions (List[str]): Palabras que no aplican esta regla
+        priority (int): Prioridad de aplicación (mayor = primero)
+    """
     pattern: str
     replacement: str
-    context: Optional[str] = None  # antes/después de ciertos caracteres
+    context: Optional[str] = None
     exceptions: List[str] = field(default_factory=list)
-    priority: int = 0  # reglas con mayor prioridad se aplican primero
+    priority: int = 0
 
 
 class SpanishPhoneticTransformer:
     """
-    Transformador fonético español que aplica reglas sistemáticas
-    de errores ortográficos basados en pronunciación
-    Incluye adaptación de anglicismos al castellano de Toledo
+    Transformador fonético para español con simulación de variaciones dialectales.
+
+    Implementa un sistema de reglas que transforma texto escrito en español
+    a su forma fonética, reflejando fenómenos comunes de pronunciación como
+    betacismo, yeísmo, seseo, etc.
+
+    Características:
+        - Caché de transformaciones para rendimiento
+        - Sistema de prioridades en reglas
+        - Consistencia en transformaciones repetidas
+        - Soporte para excepciones por palabra
+
+    Attributes:
+        word_cache (dict): Caché de palabras individuales transformadas
+        phrase_cache (dict): Caché de frases completas
+        transformation_history (defaultdict): Historial para mantener consistencia
+        phonetic_rules (list): Conjunto de reglas fonéticas a aplicar
     """
 
     def __init__(self):
-        """Inicializa el transformador con reglas predefinidas"""
+        """
+        Inicializa el transformador con reglas fonéticas predefinidas.
+
+        Configura el sistema de caché multicapa y carga todas las reglas
+        de transformación fonética organizadas por fenómeno.
+        """
         # Sistema de caché multicapa
         self.word_cache = {}  # Caché de palabras individuales
         self.phrase_cache = {}  # Caché de frases comunes

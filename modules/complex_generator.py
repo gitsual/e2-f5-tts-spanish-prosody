@@ -1,31 +1,48 @@
 #!/usr/bin/env python3
 """
-Generador mejorado (v3) AUTÓNOMO para crear un audio completo por cada archivo .wav
-de referencia presente en el directorio del script. Genera una carpeta con
-timestamp por cada ejecución para organizar todos los resultados.
+====================================================================================================
+GENERADOR BASE - ESTRUCTURA COMPLEJA MEJORADA (v3)
+====================================================================================================
 
-FUNCIONAMIENTO AUTÓNOMO:
-- Busca automáticamente archivos .wav en su directorio
-- Lee el texto desde archivos: texto.txt, ejemplo_texto.txt, contenido.txt o frases.txt
-- Si no encuentra archivo de texto, usa el texto por defecto
-- No requiere parámetros de línea de comandos
+Descripción:
+    Clase base para la generación de audio con F5-TTS. Proporciona la infraestructura
+    fundamental para la síntesis de voz con clonación vocal y procesamiento por frases.
 
-Estructura de salida:
-generaciones/
-├── 2025-01-09_14-30-25_estructura_compleja/
-│   ├── 792_046_clean_7401-007/
-│   │   ├── estructura_compleja_mejorada_nfe64.wav
-│   │   ├── frase_01.wav
-│   │   ├── frase_02.wav
-│   │   ├── ...
-│   │   └── analisis_tecnico.txt
-│   ├── 793_041_clean_1971-009/
-│   │   └── ...
-│   └── resumen_ejecucion.txt
-└── ...
+Funcionamiento:
+    Sistema autónomo que:
+    - Busca automáticamente archivos .wav de referencia en el directorio
+    - Lee texto desde archivos predefinidos (texto.txt, ejemplo_texto.txt, etc.)
+    - Genera audio segmentado por frases con crossfade
+    - Organiza resultados en estructura de directorios con timestamp
 
-Uso:
-  python3 generar_estructura_compleja_v3.py
+Arquitectura de Salida:
+    generaciones/
+    ├── YYYY-MM-DD_HH-MM-SS_estructura_compleja/
+    │   ├── referencia_1/
+    │   │   ├── estructura_compleja_mejorada_nfeXX.wav  # Audio final
+    │   │   ├── frase_01.wav                            # Frases individuales
+    │   │   ├── frase_02.wav
+    │   │   ├── ...
+    │   │   └── analisis_tecnico.txt                    # Métricas técnicas
+    │   └── resumen_ejecucion.txt                       # Resumen global
+
+Características Técnicas:
+    - Segmentación automática de texto en frases
+    - Concatenación con crossfade configurable
+    - Normalización de volumen por frase
+    - Filtrado opcional de DC offset
+    - Optimización de parámetros F5-TTS por contexto
+    - Gestión de memoria CUDA optimizada
+
+Parámetros de Generación:
+    - nfe_step: Pasos de flow matching (default: 32)
+    - cfg_strength: Fuerza de classifier-free guidance (default: 2.0)
+    - sway_sampling_coef: Coeficiente de muestreo sway (default: -1.0)
+    - speed: Velocidad de habla relativa (default: 1.0)
+
+Autor: Sistema base F5-TTS
+Versión: 3.0
+====================================================================================================
 """
 
 import os
@@ -44,9 +61,13 @@ import logging
 import re
 from datetime import datetime
 
+# Suprimir warnings de librerías externas
 warnings.filterwarnings("ignore")
 
-# Configuración CUDA temprana
+# ====================================================================================================
+# CONFIGURACIÓN DE ENTORNO
+# ====================================================================================================
+# Configuración CUDA para orden consistente de dispositivos
 os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 

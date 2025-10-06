@@ -40,7 +40,7 @@ echo ""
 echo "🔍 Verificando dependencias Python..."
 
 # Lista de paquetes requeridos
-PACKAGES=("numpy" "soundfile" "librosa" "tkinter")
+PACKAGES=("numpy" "soundfile" "librosa" "gradio")
 
 MISSING_PACKAGES=()
 
@@ -52,14 +52,7 @@ done
 
 if [ ${#MISSING_PACKAGES[@]} -ne 0 ]; then
     echo "📦 Instalando paquetes faltantes..."
-    pip3 install numpy soundfile librosa
-
-    # tkinter es especial
-    if ! python3 -c "import tkinter" 2>/dev/null; then
-        echo "⚠️  tkinter faltante. En Ubuntu/Debian, instálalo con:"
-        echo "    sudo apt-get install python3-tk"
-        echo "   En otros sistemas, consulta la documentación."
-    fi
+    pip3 install numpy soundfile librosa gradio
 fi
 
 # Mostrar información del sistema
@@ -79,8 +72,8 @@ echo ""
 echo "🚀 Iniciando interfaz gráfica..."
 echo ""
 
-# Ejecutar el generador
-python3 modules/main_app.py
+# Ejecutar el generador con interfaz Gradio
+python3 modules/gradio_app.py
 
 echo ""
 echo "👋 Generador cerrado. ¡Hasta pronto!"

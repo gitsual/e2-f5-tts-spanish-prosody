@@ -1,13 +1,48 @@
 #!/usr/bin/env python3
 """
-Sistema de Mejora Prosódica para F5-TTS
-Implementa arquitectura vocal basada en reglas armónicas documentadas:
-- Arco Prosódico (Lieberman, 1967; Pierrehumbert, 1980)
-- Regla del 3-5-8 (BBC, años 50)
-- Sincronización respiratoria-sintáctica
+====================================================================================================
+SISTEMA DE MEJORA PROSÓDICA PARA F5-TTS
+====================================================================================================
 
-Parte 1: Hints para generación (rápido, no añade tiempo significativo)
-Parte 2: Post-procesamiento (opcional, más exhaustivo)
+Descripción:
+    Módulo central del sistema de mejoras prosódicas. Implementa una arquitectura
+    vocal completa basada en principios lingüísticos y acústicos documentados.
+
+Fundamentos Teóricos:
+    - Arco Prosódico (Lieberman, 1967; Pierrehumbert, 1980)
+      Modelado natural de curvas de entonación en el habla
+
+    - Regla del 3-5-8 (BBC Broadcasting, años 50)
+      Patrones rítmicos óptimos para narrativa hablada
+
+    - Sincronización Respiratoria-Sintáctica
+      Alineación de pausas con estructura gramatical
+
+Arquitectura del Sistema:
+
+    PARTE 1: GENERACIÓN CON HINTS (Fase ligera)
+    --------------------------------------------
+    - ProsodyHintGenerator: Genera hints para guiar a F5-TTS
+    - Operación rápida, mínimo overhead temporal
+    - Mejora la prosodia durante la generación inicial
+
+    PARTE 2: POST-PROCESAMIENTO (Fase exhaustiva)
+    ----------------------------------------------
+    - ProsodyAnalyzer: Analiza características acústicas del audio generado
+    - ProsodyProblemDetector: Identifica problemas prosódicos
+    - SelectiveRegenerator: Regenera selectivamente segmentos problemáticos
+    - Operación más costosa pero con resultados superiores
+
+Componentes Principales:
+    - ProsodyHintGenerator: Generación de hints contextuales
+    - ProsodyAnalyzer: Análisis espectral y temporal
+    - ProsodyProblemDetector: Detección de anomalías prosódicas
+    - SelectiveRegenerator: Corrección selectiva
+    - ProsodyOrchestrator: Orquestación global (opcional)
+
+Autor: Sistema de generación prosódica F5-TTS
+Versión: 2.0
+====================================================================================================
 """
 
 import numpy as np
@@ -21,7 +56,9 @@ from pathlib import Path
 import logging
 import sys
 
-# Configurar logging
+# ====================================================================================================
+# CONFIGURACIÓN DE LOGGING
+# ====================================================================================================
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 

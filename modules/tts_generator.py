@@ -1,16 +1,45 @@
 #!/usr/bin/env python3
 """
-Generador Híbrido: Tu sistema original + Mejoras Prosódicas
-Usa tu clase EstructuraComplejaMejorada como base y añade arquitectura vocal documentada
+====================================================================================================
+GENERADOR HÍBRIDO F5-TTS CON MEJORAS PROSÓDICAS
+====================================================================================================
+
+Descripción:
+    Sistema híbrido que combina el generador original (EstructuraComplejaMejorada) con
+    mejoras prosódicas avanzadas. Mantiene toda la funcionalidad del sistema original
+    mientras añade capacidades de análisis y mejora de la prosodia.
+
+Arquitectura:
+    - Hereda de EstructuraComplejaMejorada (generador base)
+    - Integra ProsodyHintGenerator para guiar la generación
+    - Incluye ProsodyAnalyzer para análisis post-generación
+    - Utiliza SelectiveRegenerator para corregir problemas
+    - Implementa concatenación inteligente con crossfade
+
+Características:
+    - Procesamiento en dos fases (generación + post-procesamiento)
+    - Hints prosódicos contextuales por posición en el texto
+    - Detección automática de problemas prosódicos
+    - Regeneración selectiva de segmentos problemáticos
+    - Configuración CUDA optimizada para evitar OOM
+
+Autor: Sistema de generación prosódica F5-TTS
+Versión: 2.0 (Híbrido)
+====================================================================================================
 """
 
 import os
 import sys
 
-# Configuración optimizada de memoria CUDA para evitar OOM
+# ====================================================================================================
+# CONFIGURACIÓN DE ENTORNO CUDA
+# ====================================================================================================
+# Configuración optimizada de memoria CUDA para prevenir errores Out-Of-Memory (OOM)
+# - expandable_segments: Permite expansión dinámica de segmentos de memoria
+# - max_split_size_mb: Limita el tamaño de división de bloques a 64MB
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True,max_split_size_mb:64'
-os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'          # Orden consistente de dispositivos
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'                # Usar solo GPU 0
 import shutil
 from pathlib import Path
 import librosa
@@ -55,11 +84,43 @@ warnings.filterwarnings("ignore")
 
 class ProsodyEnhancedGenerator(EstructuraComplejaMejorada):
     """
-    Versión mejorada de tu generador original que añade arquitectura prosódica
-    Mantiene TODOS tus parámetros originales y validaciones
+    Generador mejorado con capacidades prosódicas avanzadas.
+
+    Extiende la clase EstructuraComplejaMejorada añadiendo:
+    - Sistema de hints prosódicos contextuales
+    - Análisis automático de características prosódicas
+    - Detección y corrección de problemas
+    - Orquestación global para coherencia narrativa
+
+    Esta clase mantiene 100% de compatibilidad con el sistema original,
+    añadiendo funcionalidad opcional de mejora prosódica.
+
+    Attributes:
+        prosody_hint_gen (ProsodyHintGenerator): Generador de hints prosódicos
+        analyzer (ProsodyAnalyzer): Analizador de características del audio
+        detector (ProsodyProblemDetector): Detector de problemas prosódicos
+        enable_prosody_hints (bool): Si aplicar hints durante generación
+        enable_postprocessing (bool): Si aplicar post-procesamiento
+        prosody_stats (dict): Estadísticas de aplicación de mejoras
+
+    Hereda:
+        Todos los atributos y métodos de EstructuraComplejaMejorada
     """
 
     def __init__(self, model_path="./model_943000.pt", texto_usuario=None, session_dir=None, reference_file="segment_2955.wav"):
+        """
+        Inicializa el generador híbrido con mejoras prosódicas.
+
+        Args:
+            model_path (str): Ruta al modelo F5-TTS (.pt)
+            texto_usuario (str): Texto completo a sintetizar
+            session_dir (str): Directorio para guardar resultados
+            reference_file (str): Archivo de audio para clonación de voz
+
+        Note:
+            Primero inicializa la clase padre (generador original) y luego
+            añade los componentes del sistema prosódico.
+        """
         # Inicializar la clase padre con todos tus parámetros originales
         super().__init__(model_path, texto_usuario, session_dir)
 
